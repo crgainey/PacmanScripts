@@ -17,7 +17,6 @@ public class EnemyMovement : MonoBehaviour
 
     public float scatterLength = 5f;
     public float timeScatter;
-    public float timeRoam;
     public float timeRun;
 
 
@@ -29,7 +28,13 @@ public class EnemyMovement : MonoBehaviour
     Seeker seeker;
     Rigidbody2D rb;
 
-    public Transform[] waypoints;
+    //for scatter mode
+    public Transform[] redWaypoints;
+    public Transform[] pinkWaypoints;
+    public Transform[] blueWaypoints;
+    public Transform[] orangeWaypoints;
+
+    public int waypointIndex;
 
     GameController _gameController;
 
@@ -68,10 +73,6 @@ public class EnemyMovement : MonoBehaviour
                 Scatter();
                 break;
 
-            case State.Roam:
-                Roam();
-                break;
-
             case State.Chase:
                 Chase();
                 break;
@@ -103,39 +104,31 @@ public class EnemyMovement : MonoBehaviour
     }
 
     //the start area the ghosts go to
-    void Roam()
+    void Scatter()
     {
-
         if (gameObject.CompareTag("Red"))
         {
-           
+            transform.position = Vector2.MoveTowards(transform.position, redWaypoints[waypointIndex].position, speed * Time.deltaTime);
+            waypointIndex++;
         }
 
         else if (gameObject.CompareTag("Pink"))
         {
-           
+            transform.position = Vector2.MoveTowards(transform.position, pinkWaypoints[waypointIndex].position, speed * Time.deltaTime);
+            waypointIndex++;
         }
 
         else if (gameObject.CompareTag("Blue"))
         {
-            
+            transform.position = Vector2.MoveTowards(transform.position, blueWaypoints[waypointIndex].position, speed * Time.deltaTime);
+            waypointIndex++;
         }
 
         else if (gameObject.CompareTag("Orange"))
         {
-            
+            transform.position = Vector2.MoveTowards(transform.position, orangeWaypoints[waypointIndex].position, speed * Time.deltaTime);
+            waypointIndex++;
         }
-    }
-
-    public static Vector2 GetRandomDirection()
-    {
-        return new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized;
-    }
-
-    //random movement
-    void Scatter()
-    {
-        GetRandomDirection();
     }
 
     //chase the player
