@@ -1,33 +1,37 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 using UnityEngine.UI;
+using Pathfinding;
 
-
-public class EnemyMovement : MonoBehaviour
+//Using A* Project pathfinding
+public class EnemyAI : MonoBehaviour
 {
-    public GameObject calicoEnemy;
-    public GameObject orangeEnemy;
-    public GameObject grayEnemy;
-    
+    public Transform target;
+
     public float speed;
-   
-    public Transform[] waypoints;
-    public int currentWaypoint = 0;
+    public float NextWaypointDistance;
+    public float radius;
 
+    public int scoreValue;
+
+    Path path;
+    int currentWaypoint = 0;
+    bool reachedEndOfPath = false;
+
+    Seeker seeker;
     Rigidbody2D rb;
-
-    GameController _gameController;
 
     public Animator anim;
 
     public int currentState;
 
+    GameController _gameController;
+
     public float startTime = 0;
     public float startTimeDelay = 2;
-    public int scoreValue;
 
-    // Start is called before the first frame update
     void Start()
     {
         GameObject _gameControllerObject = GameObject.FindWithTag("GameController");
@@ -41,27 +45,22 @@ public class EnemyMovement : MonoBehaviour
             Debug.Log("Cannot find 'GameController' script");
         }
 
-        //sets the name of the enemys
-      
-        calicoEnemy.name = "Calico";
-        orangeEnemy.name = "Orange";
-        grayEnemy.name = "Gray";
-        
+        seeker = GetComponent<Seeker>();
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
 
-        currentState = 0;
+        InvokeRepeating("UpdatePath", 0f, .5f);
 
         Physics2D.IgnoreLayerCollision(8, 9);
     }
 
     private void FixedUpdate()
-    { 
+    {
 
         switch (currentState)
         {
             case 0:
-                Scatter();
+                Chase();
                 break;
 
             case 1:
@@ -69,41 +68,62 @@ public class EnemyMovement : MonoBehaviour
                 break;
         }
     }
- 
 
-    //The position in the box
     Vector2 StartPoint()
     {
-        switch (gameObject.name)
+        return new Vector2(-0.94f, 1.25f);
+    }
+    public void UpdatePath()
+    {
+
+        if (seeker.IsDone())
         {
-           
-            case "Calico":
-                return new Vector2(-0.15f, 1.23f);
-
-            case "Orange":
-                return new Vector2(1.02f, 1.27f);
-
-            case "Gray":
-                return new Vector2(2.03f, 1.15f);
+            seeker.StartPath(rb.position, target.position, OnPathComplete);
         }
-        return new Vector2();
+
     }
 
-    //the start area the ghosts go to
-    void Scatter()
+    void OnPathComplete(Path p)
+    {
+        if (!p.error)
+        {
+            path = p;
+            currentWaypoint = 0;
+        }
+    }
+    // Update is called once per frame
+
+    void Chase()
     {
         startTime += Time.deltaTime;
 
         if (startTime >= startTimeDelay)
         {
-            if (transform.position != waypoints[currentWaypoint].position)
+            if (path == null)
             {
-                Vector2 pos = Vector2.MoveTowards(transform.position, waypoints[currentWaypoint].position, speed * Time.deltaTime);
-                GetComponent<Rigidbody2D>().MovePosition(pos);
+                return;
             }
 
-            else currentWaypoint = (currentWaypoint + 1) % waypoints.Length;
+            if (currentWaypoint >= path.vectorPath.Count)
+            {
+                reachedEndOfPath = true;
+            }
+            else
+            {
+                reachedEndOfPath = false;
+            }
 
+            Vector2 direction = ((Vector2)path.vectorPath[currentWaypoint] - rb.position).normalized;
+            Vector2 force = direction * speed * Time.deltaTime;
+
+            rb.AddForce(force);
+
+            float distance = Vector2.Distance(rb.position, path.vectorPath[currentWaypoint]);
+
+            if (distance < NextWaypointDistance)
+            {
+                currentWaypoint++;
+            }
         }
     }
 
@@ -112,6 +132,7 @@ public class EnemyMovement : MonoBehaviour
         if (currentState == 1)
         {
             anim.SetBool("runaway", true);
+
             transform.position = StartPoint();
             //set animation to vun
         }
@@ -121,13 +142,11 @@ public class EnemyMovement : MonoBehaviour
 
     }
 
-   private void OnTriggerEnter2D(Collider2D other)
-    { 
+    private void OnTriggerEnter2D(Collider2D other)
+    {
         if (other.CompareTag("Player"))
         {
-
-            Debug.Log("Collided with player");
-            if(currentState == 1)
+            if (currentState == 1)
             {
                 _gameController.AddScore(scoreValue);
             }
@@ -138,4 +157,5 @@ public class EnemyMovement : MonoBehaviour
             }
         }
     }
+
 }

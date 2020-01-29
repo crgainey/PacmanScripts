@@ -7,12 +7,13 @@ public class GameController : MonoBehaviour
 {
 
     public Text scoreText;
+    public Text livesText;
     public Text gameOver;
-    //public image something for lives
-    public int score;
+    public static int score;
     public int lives;
 
-    public GameObject restartButton, quitButton;
+
+    public GameObject menuButton, quitButton, mouse1, mouse2, mouse3, player;
 
     //private PlayerMovement playerMovement;
 
@@ -24,8 +25,13 @@ public class GameController : MonoBehaviour
         gameOver.text = "";
         SetGameover();
 
-        restartButton.SetActive(false);
+        menuButton.SetActive(false);
         quitButton.SetActive(false);
+
+        mouse1.SetActive(true);
+        mouse2.SetActive(true);
+        mouse3.SetActive(true);
+
     }
 
     void Update()
@@ -35,23 +41,53 @@ public class GameController : MonoBehaviour
             Application.Quit();
     }
 
-    public void PowerUP()
+    public void AddScore(int newScoreValue)
     {
-
+        score += newScoreValue;
+        UpdateScore();
     }
 
     public void UpdateScore()
     {
-        score++;
+        
         scoreText.text = "High Score" + score;
         SetGameover();
 
-        //in player script add ints for each object and call back to this script
     }
+   
 
     public void UpdateLives()
     {
 
+        if (lives > 3)
+              lives = 3;
+
+          switch (lives)
+          {
+              case 3:
+                  mouse1.SetActive(true);
+                  mouse2.SetActive(true);
+                  mouse3.SetActive(true);
+                  break;
+
+              case 2:
+                  mouse1.SetActive(true);
+                  mouse2.SetActive(true);
+                  mouse3.SetActive(false);
+                  break;
+
+              case 1:
+                  mouse1.SetActive(true);
+                  mouse2.SetActive(false);
+                  mouse3.SetActive(false);
+                  break;
+
+              case 0:
+                  mouse1.SetActive(false);
+                  mouse2.SetActive(false);
+                  mouse3.SetActive(false);
+                  break;
+          }
     }
 
     public void SetGameover()
@@ -61,7 +97,7 @@ public class GameController : MonoBehaviour
         if(lives == 0)
         {
             gameOver.text = "GAME OVER";
-            restartButton.SetActive(true);
+            menuButton.SetActive(true);
             quitButton.SetActive(true);
         }
     }
